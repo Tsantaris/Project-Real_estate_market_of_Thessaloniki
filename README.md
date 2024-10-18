@@ -1,2 +1,4 @@
 # Project-spitogatos
-This project is about finding the best "value for money" house to buy in the city of Thessaloniki. We will use data from the biggest real estate website in Greece: spitogatos.gr.
+This is small project I did in my attempt to learn some data science.
+
+The project is about finding the best "value for money" house to buy in the city of Thessaloniki in Greece. We will use data from the biggest greek real estate website: spitogatos.gr.
