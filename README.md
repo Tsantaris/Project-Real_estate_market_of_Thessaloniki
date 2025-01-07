@@ -1,5 +1,5 @@
 # Project-spitogatos
-This is an ongoing project inspired by a data science course I did from IBM.
+This is an ongoing project inspired from an IBM data science course I took.
 
 The project is about finding the best "value for money" house to buy in the city of Thessaloniki in Greece. 
 
