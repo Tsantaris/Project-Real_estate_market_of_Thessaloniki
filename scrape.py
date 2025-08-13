@@ -16,21 +16,23 @@ import os
 list_of_attributes_heating={"autonomous_heating":"autonomi_thermansi","central_heating":"kentriki_thermansi","individual_heating":"atomiki_thermansi","no_heating":"xwris_thermansi"}
 list_of_attributes_kind_of_heating={
 "petrol_heating":"thermansi_petrelaio","natural_gas_heating":"thermansi_fisiko_aerio","LPG_heating":"thermansi_igraerio","electrical_heating":"thermansi_revma",
-"thermal_storage_heating":"thermansi_thermosisswreftis","wood_headting":"thermansi_sompa","pellet_heating":"thermansi_pellet","heat_pump_heating":"thermansi_antlia_thermansis"
+"thermal_storage_heating":"thermansi_thermosisswreftis","wood_heating":"thermansi_sompa","pellet_heating":"thermansi_pellet","heat_pump_heating":"thermansi_antlia_thermansis"
 }
 list_of_attributes={"with_AC":"me_klimatismo","with_storage_room":"me_apothiki","with_elavator":"me_anelkistira","with_solar_heater":"me_iliako_thermosifona","with_fireplace":"me_tzaki",
 "Furnished":"epiplwmeno","with_parking":"me_garage","with_garden":"me_kipo","with_pool":"me_pisina","with_balcony":"me_mpalkoni","last_floor":"retire"}
-list_of_years={i:f"etos_kataskevis_apo-{i}/etos_kataskevis_eos-{i}" for i in range(1952,2025)}
+list_of_years={i:f"etos_kataskevis_apo-{i}/etos_kataskevis_eos-{i}" for i in range(1952,2026)}
 
 filters=list_of_attributes_heating|list_of_attributes_kind_of_heating|list_of_attributes|list_of_years
 #Creating a dictionary with the urls for each filter.
 html_files_years_filters={}
+html_files_custom_made={}
 for attribute in filters:
     
     url_solo=f"https://www.spitogatos.gr/pwliseis-katoikies/anazitisi-xarti/{filters[attribute]}?gad_source=1&gclid=Cj0KCQjw4MSzBhC8ARIsAPFOuyWdbWoq9MkzYB_9GZ1t8uEdSNmoSlUXErPyIku-g_dip54sBWRoNC0aArmUEALw_wcB&latitudeLow=40.535981&latitudeHigh=40.733210&longitudeLow=22.799034&longitudeHigh=23.120041&zoom=14" 
-    
+    url_custom=f"https://www.spitogatos.gr/pwliseis-katoikies/pollaples_perioxes-2903,291404,508609/{filters[attribute]}"
     
     html_files_years_filters[attribute]=url_solo
+    html_files_custom_made[attribute]=url_custom
 
 
 def single_page_scraper(sel_webdriver,df_base):
@@ -95,7 +97,7 @@ def single_page_scraper(sel_webdriver,df_base):
     return(houses_attributes)
 
 
-def get_driver(sel_webdriver,year=None,attribute=None):
+def get_driver(sel_webdriver,attribute=None,custom_scrape=False):
     """
     Takes the driver instance to the correct website.
 
@@ -103,10 +105,12 @@ def get_driver(sel_webdriver,year=None,attribute=None):
         sel_webdriver (WebDriver): Selenium WebDriver instance.
         year: Year for which to fetch data.
     """
-    if year !=None:
-        sel_webdriver.get(html_files_years1952_2024[year])
-    if attribute != None:
+    
+    if attribute != None and custom_scrape:
+        sel_webdriver.get(html_files_custom_made[attribute])
+    elif attribute != None and not custom_scrape:
         sel_webdriver.get(html_files_years_filters[attribute])
+    
 
 def click(sel_webdriver):
     """
@@ -137,6 +141,7 @@ def many_page_scrape(sel_webdriver,df,attribute=None,):
     """
     
     #1. We find the number of pages in the html file of the webpage
+    page_num,current_page=1,1
     page_num,current_page=find_pages(sel_webdriver)
     print(f"the number of total pages to scrape is:{page_num}")
     #2. We call the single_page_scraper function on the driver we loaded on the first step. We append the data (including the year) to our initial dataframe.
@@ -145,9 +150,7 @@ def many_page_scrape(sel_webdriver,df,attribute=None,):
     df=pd.concat([df,df1],ignore_index=True)
     #3. If there is more than one page of houses built on that specific year we load the next page with the click function.
     if  page_num>1:
-        
-        
-        
+
         for page in range(current_page,page_num):
             print(f"We scraped page {page} of {page_num}")
             click(sel_webdriver)
@@ -175,7 +178,12 @@ def many_page_scrape(sel_webdriver,df,attribute=None,):
                 df.reset_index(drop=True, inplace=True)
                 df.to_csv(path)
                 print(f"Saved data from page {page//50*50} to {page_num}")
-
+    if page_num==1:
+        path=f"/home/tsantaris/OneDrive/Data science and AI stuff/Project spitogatos/Houses_data_{datetime.date.today()}/Houses_data_{attribute}/Houses_data_lastbatch.csv"
+        df.drop_duplicates(inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df.to_csv(path)
+        print(f"Saved data from page 1")
     return(df)
 
 def find_pages(sel_webdriver):
